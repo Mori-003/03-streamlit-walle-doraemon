@@ -18,8 +18,9 @@ def load_model():
         pathlib.PosixPath = pathlib.WindowsPath
     
     try:
+        # 使用Learner.load或load_learner加载模型
         model_path = pathlib.Path(__file__).parent / "doraemon_walle_model.pkl"
-        model = load_learner(model_path)
+        model = load_learner(model_path)  # 如果不考虑pickle安全性问题，可以保持此方法
     except Exception as e:
         st.error(f"加载模型时出错: {e}")
         st.stop()
@@ -44,4 +45,3 @@ if uploaded_file is not None:
     
     pred, pred_idx, probs = model.predict(image)
     st.write(f"预测结果: {pred}; 概率: {probs[pred_idx]:.04f}") 
-
