@@ -1,10 +1,18 @@
 import streamlit as st
 import sys
+import os
 
 # Python 版本检查
 if sys.version_info >= (3, 13):
     st.error("⚠️ 当前 Python 版本为 3.13+，可能与 fastai 不兼容。建议使用 Python 3.11。")
     st.stop()
+
+# 禁用不必要的警告
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="fastai.learner")
+
+# 在导入torch之前设置环境变量，避免某些路径问题
+os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
 
 from fastai.vision.all import *
 import pathlib
@@ -22,8 +30,17 @@ def load_model():
         model_path = pathlib.Path(__file__).parent / "doraemon_walle_model.pkl"
         if not model_path.exists():
             raise FileNotFoundError(f"模型文件不存在: {model_path}")
-        model = load_learner(model_path)
-        return model
+            
+        # 使用try-except捕获load_learner可能的错误
+        try:
+            model = load_learner(model_path)
+            return model
+        except RuntimeError as e:
+            if "__path__._path" in str(e):
+                st.error("加载模型时出现torch路径错误。这是一个已知问题，请尝试重新启动应用。")
+                st.stop()
+            else:
+                raise
     finally:
         # 恢复原始设置
         if sys.platform == "win32" and original_posix_path is not None:
@@ -34,7 +51,8 @@ st.title("哆啦A梦与WALL-E图像分类应用")
 st.write("上传一张图片，应用将预测是哆啦A梦还是WALL-E。")
 
 try:
-    model = load_model()
+    with st.spinner("正在加载模型..."):
+        model = load_model()
 except FileNotFoundError as e:
     st.error(f"错误: {str(e)}")
     st.info("请确保模型文件存在于项目目录中。")
