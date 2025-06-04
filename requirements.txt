@@ -1,3 +1,5 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:37a9fdc4a1cdbe4705413f9c5461f63c44db9fb0e55b7d07dcdb32b24b7f46d5
-size 86
+streamlit==1.45.1
+fastai==2.8.2
+torch==2.7.0
+torchvision==0.22.0
+pillow==10.4.0 
