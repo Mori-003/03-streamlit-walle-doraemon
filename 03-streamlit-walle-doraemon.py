@@ -46,14 +46,28 @@ def load_model():
             
         # 使用try-except捕获load_learner可能的错误
         try:
+            # 添加详细日志
+            st.write(f"尝试加载模型: {model_path}")
+            st.write(f"当前 fastai 版本: {fastai.__version__}")
+            st.write(f"当前 torch 版本: {torch.__version__}")
+            
             model = load_learner(model_path)
+            st.write("模型加载成功!")
             return model
         except RuntimeError as e:
             if "__path__._path" in str(e):
                 st.error("加载模型时出现torch路径错误。这是一个已知问题，请尝试重新启动应用。")
                 st.stop()
             else:
+                st.error(f"RuntimeError: {str(e)}")
                 raise
+        except pickle.UnpicklingError as e:
+            st.error(f"Pickle错误: {str(e)}。这可能是由于模型文件与当前环境不兼容。")
+            st.info("尝试使用与模型创建时相同的fastai和torch版本。")
+            raise
+        except Exception as e:
+            st.error(f"未知错误: {str(e)}")
+            raise
     finally:
         # 恢复原始设置
         if sys.platform == "win32" and original_posix_path is not None:
