@@ -10,8 +10,12 @@ from fastai.vision.all import *
 torch.classes.__path__ = []  # 防止访问 PyTorch 内部路径
 
 # 确保事件循环在主线程中创建
-if not asyncio.get_event_loop().is_running():
-    asyncio.set_event_loop(asyncio.new_event_loop())  # 创建一个新的事件循环
+try:
+    # 在尝试执行 nest_asyncio.apply() 之前确保事件循环已经创建
+    if not asyncio.get_event_loop().is_running():
+        asyncio.set_event_loop(asyncio.new_event_loop())  # 创建一个新的事件循环
+except RuntimeError:
+    pass  # 如果事件循环已经存在，跳过这个步骤
 
 # 使用 nest_asyncio 解决异步事件循环问题
 import nest_asyncio
