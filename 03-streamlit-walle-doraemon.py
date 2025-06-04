@@ -1,60 +1,61 @@
 import streamlit as st
 import sys
-import pathlib
-import os
-import torch
-import asyncio  # 导入 asyncio 模块
-from fastai.vision.all import *
-
-# 修复 PyTorch 类路径问题
-torch.classes.__path__ = []  # 防止访问 PyTorch 内部路径
-
-# 确保事件循环在主线程中创建
-try:
-    # 在尝试执行 nest_asyncio.apply() 之前确保事件循环已经创建
-    if not asyncio.get_event_loop().is_running():
-        asyncio.set_event_loop(asyncio.new_event_loop())  # 创建一个新的事件循环
-except RuntimeError:
-    pass  # 如果事件循环已经存在，跳过这个步骤
 
 # Python 版本检查
 if sys.version_info >= (3, 13):
-    st.error("⚠️ 当前 Python 版本为 3.13+，可能与 fastai 不兼容。建议使用 Python 3.11 或更低版本。")
+    st.error("⚠️ 当前 Python 版本为 3.13+，可能与 fastai 不兼容。建议使用 Python 3.11。")
     st.stop()
 
-@st.cache_data
+from fastai.vision.all import *
+import pathlib
+
+@st.cache_resource
 def load_model():
     """加载并缓存模型"""
     # Windows 路径兼容性处理
-    temp = None
+    original_posix_path = None
     if sys.platform == "win32":
-        temp = pathlib.PosixPath
+        original_posix_path = pathlib.PosixPath
         pathlib.PosixPath = pathlib.WindowsPath
     
     try:
         model_path = pathlib.Path(__file__).parent / "doraemon_walle_model.pkl"
+        if not model_path.exists():
+            raise FileNotFoundError(f"模型文件不存在: {model_path}")
         model = load_learner(model_path)
-    except Exception as e:
-        st.error(f"加载模型时出错: {e}")
-        st.stop()
+        return model
     finally:
         # 恢复原始设置
-        if sys.platform == "win32" and temp is not None:
-            pathlib.PosixPath = temp
-    
-    return model
+        if sys.platform == "win32" and original_posix_path is not None:
+            pathlib.PosixPath = original_posix_path
 
 # 主应用
-st.title("图像分类应用")
-st.write("上传一张图片，应用将预测对应的标签。")
+st.title("哆啦A梦与WALL-E图像分类应用")
+st.write("上传一张图片，应用将预测是哆啦A梦还是WALL-E。")
 
-model = load_model()
+try:
+    model = load_model()
+except FileNotFoundError as e:
+    st.error(f"错误: {str(e)}")
+    st.info("请确保模型文件存在于项目目录中。")
+    st.stop()
+except Exception as e:
+    st.error(f"加载模型时出错: {str(e)}")
+    st.stop()
 
 uploaded_file = st.file_uploader("选择一张图片...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    image = PILImage.create(uploaded_file)
-    st.image(image, caption="上传的图片", use_container_width=True)
-    
-    pred, pred_idx, probs = model.predict(image)
-    st.write(f"预测结果: {pred}; 概率: {probs[pred_idx]:.04f}")
+    try:
+        with st.spinner('处理图片中...'):
+            image = PILImage.create(uploaded_file)
+            st.image(image, caption="上传的图片", use_container_width=True)
+            
+            pred, pred_idx, probs = model.predict(image)
+            
+            # 使用进度条显示概率
+            st.write(f"预测结果: {pred}")
+            st.progress(float(probs[pred_idx]))
+            st.write(f"概率: {probs[pred_idx]:.04f}")
+    except Exception as e:
+        st.error(f"处理图片时出错: {str(e)}")
