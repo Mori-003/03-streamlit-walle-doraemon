@@ -14,6 +14,14 @@ warnings.filterwarnings("ignore", category=UserWarning, module="fastai.learner")
 # 在导入torch之前设置环境变量，避免某些路径问题
 os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
 
+# 修复torch._classes.__path__._path问题
+import torch
+if hasattr(torch, '_classes') and not hasattr(torch._classes, '__path__'):
+    # 创建一个假的__path__属性，避免Streamlit监视器出错
+    class FakePath:
+        _path = []
+    torch._classes.__path__ = FakePath()
+
 from fastai.vision.all import *
 import pathlib
 
