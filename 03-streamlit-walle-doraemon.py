@@ -17,10 +17,6 @@ try:
 except RuntimeError:
     pass  # 如果事件循环已经存在，跳过这个步骤
 
-# 使用 nest_asyncio 解决异步事件循环问题
-import nest_asyncio
-nest_asyncio.apply()  # 允许嵌套事件循环
-
 # Python 版本检查
 if sys.version_info >= (3, 13):
     st.error("⚠️ 当前 Python 版本为 3.13+，可能与 fastai 不兼容。建议使用 Python 3.11 或更低版本。")
