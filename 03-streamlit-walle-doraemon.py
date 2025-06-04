@@ -1,8 +1,19 @@
 import streamlit as st
 import sys
 import pathlib
-from fastai.vision.all import *
+import os
 import torch
+import nest_asyncio
+from fastai.vision.all import *
+
+# 解决异步事件循环问题
+nest_asyncio.apply()
+
+# 禁用 Streamlit 文件监视器
+os.environ["STREAMLIT_SERVER_ENABLE_FILE_WATCHER"] = "false"
+
+# 手动解决 torch.classes 路径问题
+torch.classes.__path__ = []  # 防止 Streamlit 访问 PyTorch 内部的路径
 
 # Python 版本检查
 if sys.version_info >= (3, 13):
@@ -12,16 +23,22 @@ if sys.version_info >= (3, 13):
 @st.cache_data
 def load_model():
     """加载并缓存模型"""
-    # Windows 路径兼容性处理 - 这里不再使用 PosixPath
+    # Windows 路径兼容性处理
+    temp = None
+    if sys.platform == "win32":
+        temp = pathlib.PosixPath
+        pathlib.PosixPath = pathlib.WindowsPath
+    
     try:
         model_path = pathlib.Path(__file__).parent / "doraemon_walle_model.pkl"
-        
-        # 使用 Learner.load 来替代 load_learner
-        model = Learner.load(model_path)
-        
+        model = load_learner(model_path)
     except Exception as e:
         st.error(f"加载模型时出错: {e}")
         st.stop()
+    finally:
+        # 恢复原始设置
+        if sys.platform == "win32" and temp is not None:
+            pathlib.PosixPath = temp
     
     return model
 
@@ -38,4 +55,4 @@ if uploaded_file is not None:
     st.image(image, caption="上传的图片", use_container_width=True)
     
     pred, pred_idx, probs = model.predict(image)
-    st.write(f"预测结果: {pred}; 概率: {probs[pred_idx]:.04f}") 
+    st.write(f"预测结果: {pred}; 概率: {probs[pred_idx]:.04f}")
