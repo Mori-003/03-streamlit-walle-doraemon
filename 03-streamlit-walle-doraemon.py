@@ -7,20 +7,25 @@ if sys.version_info >= (3, 13):
     st.error("⚠️ 当前 Python 版本为 3.13+，可能与 fastai 不兼容。建议使用 Python 3.11。")
     st.stop()
 
+# 设置环境变量，禁用文件监视
+os.environ["STREAMLIT_SERVER_FILE_WATCHER_TYPE"] = "none"
+
+# 针对torch._classes.__path__._path错误的修复
+try:
+    import torch
+    if hasattr(torch, '_classes'):
+        class FakePath:
+            _path = []
+        if not hasattr(torch._classes, '__path__'):
+            torch._classes.__path__ = FakePath()
+        elif not hasattr(torch._classes.__path__, '_path'):
+            torch._classes.__path__._path = []
+except ImportError:
+    pass
+
 # 禁用不必要的警告
 import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="fastai.learner")
-
-# 在导入torch之前设置环境变量，避免某些路径问题
-os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
-
-# 修复torch._classes.__path__._path问题
-import torch
-if hasattr(torch, '_classes') and not hasattr(torch._classes, '__path__'):
-    # 创建一个假的__path__属性，避免Streamlit监视器出错
-    class FakePath:
-        _path = []
-    torch._classes.__path__ = FakePath()
+warnings.filterwarnings("ignore", category=UserWarning)
 
 from fastai.vision.all import *
 import pathlib
