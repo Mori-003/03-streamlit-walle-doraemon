@@ -27,6 +27,11 @@ except ImportError:
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
+# 导入pickle模块用于处理UnpicklingError
+import pickle
+
+# 添加fastai模块导入
+import fastai
 from fastai.vision.all import *
 import pathlib
 
