@@ -1,16 +1,17 @@
-import nest_asyncio
 import streamlit as st
 import sys
 import pathlib
 import os
 import torch
+import asyncio
 from fastai.vision.all import *
+
+# 创建一个事件循环
+if not asyncio.get_event_loop().is_running():
+    asyncio.set_event_loop(asyncio.new_event_loop())
 
 # 修复 PyTorch 类路径问题
 torch.classes.__path__ = []  # 防止访问 PyTorch 内部路径
-
-# 使用 nest_asyncio 解决异步事件循环问题
-nest_asyncio.apply()
 
 # Python 版本检查
 if sys.version_info >= (3, 13):
