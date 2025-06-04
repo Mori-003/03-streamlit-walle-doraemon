@@ -9,13 +9,13 @@ from fastai.vision.all import *
 # 修复 PyTorch 类路径问题
 torch.classes.__path__ = []  # 防止访问 PyTorch 内部路径
 
-# 使用 asyncio 创建事件循环
+# 确保事件循环在主线程中创建
 if not asyncio.get_event_loop().is_running():
-    asyncio.set_event_loop(asyncio.new_event_loop())  # 创建新的事件循环
+    asyncio.set_event_loop(asyncio.new_event_loop())  # 创建一个新的事件循环
 
 # 使用 nest_asyncio 解决异步事件循环问题
 import nest_asyncio
-nest_asyncio.apply()
+nest_asyncio.apply()  # 允许嵌套事件循环
 
 # Python 版本检查
 if sys.version_info >= (3, 13):
