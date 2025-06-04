@@ -3,17 +3,10 @@ import sys
 import pathlib
 import os
 import torch
-import nest_asyncio
 from fastai.vision.all import *
 
-# 解决异步事件循环问题
-nest_asyncio.apply()
-
-# 禁用 Streamlit 文件监视器
-os.environ["STREAMLIT_SERVER_ENABLE_FILE_WATCHER"] = "false"
-
-# 手动解决 torch.classes 路径问题
-torch.classes.__path__ = []  # 防止 Streamlit 访问 PyTorch 内部的路径
+# 修复 PyTorch 类路径问题
+torch.classes.__path__ = []  # 防止访问 PyTorch 内部路径
 
 # Python 版本检查
 if sys.version_info >= (3, 13):
